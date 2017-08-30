@@ -5,7 +5,7 @@ using System.IO;
 
 namespace HATE
 {
-    class StringPointer
+    public class StringPointer
     {
         public Pointer Base;
         public string Ending;
@@ -37,7 +37,7 @@ namespace HATE
         }
     }
 
-    class Pointer
+    public class Pointer
     {
         public byte[] Ptr;
         public long PtrLocation;
@@ -45,117 +45,117 @@ namespace HATE
         public Pointer(byte[] ptr, long loc) { Ptr = ptr; PtrLocation = loc; }
     }
 
-    partial class HATE
+    partial class MainForm
     {
-        public bool LoadDataAndFind(string header, long loc, float shufflechance, Func<FileStream, float, string, bool> Action)
+        const int SearchAttempts = 2137420;
+        const int WordSize = 4;
+
+        public bool LoadDataAndFind(string header, long loc, Random random, float shufflechance, Func<FileStream, Random, float, string, bool> Action)
         {
-            byte[] ToFind = header.ToCharArray().Select(x => (byte)x).ToArray();
-            byte[] ReadBuffer = new byte[ToFind.Length];
-            FileStream Data = Safe.OpenFileStream("./" + DataWin);
-            if (Data == null) { return false; }
-            DebugWriter.WriteLine("Opened " + DataWin + ".");
-            Data.Position = loc;
-
-            for (int i = 0; i < 2137420; i++)
+            if (random == null)
             {
-                Data.Read(ReadBuffer, 0, ToFind.Length);
-
-                if (ReadBuffer.Select((value, index) => value == ToFind[index]).All(x => x))
-                {
-                    DebugWriter.WriteLine(header + " Memory Region Found at " + Data.Position.ToString("X") + ".");
-
-                    Data.Position += 4;
-
-                    try
-                    {
-
-                        if (!Action(Data, shufflechance, header))
-                        {
-                            DebugWriter.WriteLine("An Error Occured While Attempting To Modify " + header + " Memory Region.");
-
-                            Data.Close();
-                            return false;
-                        }
-
-                    }
-                    catch (Exception e)
-                    {
-                        DebugWriter.Write("Exception Caught While Attempting To Modify " + header + " Memory Region. -> " + e);
-                        DebugWriter.Close();
-                        throw;
-                    }
-
-                    DebugWriter.WriteLine(header + " Memory Region Modified Successfully.");
-                    Data.Close();
-                    DebugWriter.WriteLine("Closed " + DataWin + ".");
-                    return true;
-                }
+                throw new ArgumentNullException(nameof(random));
             }
 
-            DebugWriter.WriteLine("Error: " + header + " Memory Region Not Found.");
-            Data.Close();
+            byte[] ToFind = header.ToCharArray().Select(x => (byte)x).ToArray();
+            byte[] ReadBuffer = new byte[ToFind.Length];
+
+            using (FileStream Data = new FileStream("./" + DataWin, FileMode.OpenOrCreate))
+            {
+                LogWriter.WriteLine("Opened " + DataWin + ".");
+                Data.Position = loc;
+
+                for (int i = 0; i < SearchAttempts; i++)
+                {
+                    Data.Read(ReadBuffer, 0, ToFind.Length);
+
+                    if (ReadBuffer.Select((value, index) => value == ToFind[index]).All(x => x))
+                    {
+                        LogWriter.WriteLine(header + " Memory Region Found at " + Data.Position.ToString("X") + ".");
+
+                        Data.Position += WordSize;
+
+                        try
+                        {
+                            if (!Action(Data, random, shufflechance, header))
+                            {
+                                LogWriter.WriteLine("An Error Occured While Attempting To Modify " + header + " Memory Region.");
+                                return false;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            LogWriter.Write("Exception Caught While Attempting To Modify " + header + " Memory Region. -> " + e);
+                            throw;
+                        }
+
+                        LogWriter.WriteLine(header + " Memory Region Modified Successfully.");
+                        LogWriter.WriteLine("Closed " + DataWin + ".");
+                        return true;
+                    }
+                }
+
+                LogWriter.WriteLine("Error: " + header + " Memory Region Not Found.");
+            }
+
             return false;
         }
 
-        public bool SimpleShuffle(FileStream Data, float shufflechance, string header)
+        public bool SimpleShuffle(FileStream Data, Random random, float shufflechance, string header)
         {
-            byte[] ReadBuffer = new byte[4];
+            byte[] ReadBuffer = new byte[WordSize];
             int PointerNum = 0;
             long PointerArrayBegin = 0;
             List<Pointer> PointerList = new List<Pointer>();
 
-            Data.Read(ReadBuffer, 0, 4);
+            Data.Read(ReadBuffer, 0, WordSize);
             PointerNum = BitConverter.ToInt32(ReadBuffer, 0);
             PointerArrayBegin = Data.Position;
 
             for (int i = 0; i < PointerNum; i++)
             {
+                Data.Position = PointerArrayBegin + i * WordSize;
+
                 if (RNG.NextDouble() < shufflechance)
                 {
-                    byte[] _tmp = new byte[4];
-                    Data.Read(_tmp, 0, 4);
-                    PointerList.Add(new Pointer(_tmp, Data.Position - 4));
+                    Data.Read(ReadBuffer, 0, WordSize);
+                    PointerList.Add(new Pointer(DeepCopy(ReadBuffer), Data.Position - WordSize));
                 }
             }
-            DebugWriter.WriteLine("Added " + PointerList.Count + " pointers to " + header + " List.");
 
-            PointerList.Shuffle(delegate (Pointer LeftPtr, Pointer RightPtr)
+            LogWriter.WriteLine("Added " + PointerList.Count + " pointers to " + header + " List.");
+
+            PointerList.Shuffle(PointerSwapLoc, random);
+
+            foreach (Pointer Ptr in PointerList)
             {
-                long Tmp = LeftPtr.PtrLocation;
-                LeftPtr.PtrLocation = RightPtr.PtrLocation;
-                RightPtr.PtrLocation = Tmp;
-            });
-
-            Data.Position = PointerArrayBegin;
-
-            for (int i = 0; i < PointerList.Count; i++)
-            {
-                Data.Position = PointerList[i].PtrLocation;
-                Data.Write(PointerList[i].Ptr, 0, 4);
+                Data.Position = Ptr.PtrLocation;
+                Data.Write(Ptr.Ptr, 0, WordSize);
             }
-            DebugWriter.WriteLine("Wrote " + PointerList.Count + " pointers to " + DataWin + ".");
+
+            LogWriter.WriteLine("Wrote " + PointerList.Count + " pointers to " + DataWin + ".");
 
             return true;
         }
 
-        public bool ShuffleAudio_Func(float chance)
+        public bool ShuffleAudio_Func(Random random, float chance)
         {
-            return LoadDataAndFind("AUDO", 23300000, chance, SimpleShuffle) && LoadDataAndFind("SOND", 0, chance, SimpleShuffle);
+            return LoadDataAndFind("AUDO", 23300000, random, chance, SimpleShuffle) && LoadDataAndFind("SOND", 0, random, chance, SimpleShuffle);
         }
 
-        public bool ShuffleBG_Func(float chance)
+        public bool ShuffleBG_Func(Random random, float chance)
         {
-            return LoadDataAndFind("BGND", 1900000, chance, SimpleShuffle);
+            return LoadDataAndFind("BGND", 1900000, random, chance, SimpleShuffle);
         }
 
-        public bool ShuffleFont_Func(float chance)
+        public bool ShuffleFont_Func(Random random, float chance)
         {
-            return LoadDataAndFind("FONT", 1900000, chance, SimpleShuffle);
+            return LoadDataAndFind("FONT", 1900000, random, chance, SimpleShuffle);
         }
 
-        public bool HitboxFix_Func(float chance)
+        public bool HitboxFix_Func(Random random, float chance)
         {
-            return LoadDataAndFind("SPRT", 15000, chance, delegate (FileStream Data, float shufflechance, string header)
+            return LoadDataAndFind("SPRT", 15000, random, chance, delegate (FileStream Data, Random random, float shufflechance, string header)
             {
                 byte[] ReadBuffer = new byte[4];
                 int PointerNum = 0;
@@ -172,7 +172,7 @@ namespace HATE
                     Data.Read(PointerBuffer, 0, 4);
                     PointerList.Add(new Pointer(PointerBuffer, Data.Position - 4));
                 }
-                DebugWriter.WriteLine("Added " + PointerNum + " sprite pointers to " + header + " List.");
+                LogWriter.WriteLine("Added " + PointerNum + " sprite pointers to " + header + " List.");
 
                 for (int i = 0; i < PointerNum - 1; i++)
                 {
@@ -203,15 +203,15 @@ namespace HATE
                         Data.Write(Enumerable.Repeat((byte)0, SpriteHitboxSize / 2 - 3).ToArray(), 0, SpriteHitboxSize / 2 - 3);
                     }
                 }
-                DebugWriter.WriteLine("Wrote " + PointerNum + " hitboxes to " + DataWin + ".");
+                LogWriter.WriteLine("Wrote " + PointerNum + " hitboxes to " + DataWin + ".");
 
                 return true;
             });
         }
 
-        public bool ShuffleGFX_Func(float chance)
+        public bool ShuffleGFX_Func(Random random_, float chance)
         {
-            return LoadDataAndFind("SPRT", 15000, chance, delegate (FileStream Data, float shufflechance, string header)
+            return LoadDataAndFind("SPRT", 15000, random_, chance, delegate (FileStream Data, Random random, float shufflechance, string header)
             {
                 byte[] ReadBuffer = new byte[4];
                 int PointerNum = 0;
@@ -263,16 +263,16 @@ namespace HATE
                     }
                 }
 
-                DebugWriter.WriteLine("Added " + PointerList.Count + " out of " + PointerNum + " sprite pointers to " + header + " List.");
+                LogWriter.WriteLine("Added " + PointerList.Count + " out of " + PointerNum + " sprite pointers to " + header + " List.");
 
                 PointerList.Shuffle(delegate (Pointer LeftPtr, Pointer RightPtr)
                 {
                     long Tmp = LeftPtr.PtrLocation;
                     LeftPtr.PtrLocation = RightPtr.PtrLocation;
                     RightPtr.PtrLocation = Tmp;
-                });
+                }, random);
 
-                DebugWriter.WriteLine("Shuffled " + PointerList.Count + " sprite pointers.");
+                LogWriter.WriteLine("Shuffled " + PointerList.Count + " sprite pointers.");
 
                 Data.Position = PointerArrayBegin;
 
@@ -282,15 +282,15 @@ namespace HATE
                     Data.Write(PointerList[i].Ptr, 0, 4);
                 }
 
-                DebugWriter.WriteLine("Wrote " + PointerList.Count + " sprite pointers to " + DataWin + ".");
+                LogWriter.WriteLine("Wrote " + PointerList.Count + " sprite pointers to " + DataWin + ".");
 
                 return true;
             });
         }
 
-        public bool ShuffleText_Func(float chance)
-        {
-            return LoadDataAndFind("STRG", 10700000, chance, delegate (FileStream Data, float shufflechance, string header)
+        public bool ShuffleText_Func(Random random_, float chance)
+        {          
+            return LoadDataAndFind("STRG", 10700000, random_, chance, delegate (FileStream Data, Random random, float shufflechance, string header)
             {
                 byte[] ReadBuffer = new byte[4];
                 int PointerNum = 0;
@@ -313,7 +313,7 @@ namespace HATE
                     }
                 }
 
-                DebugWriter.WriteLine("Added " + PointerList.Count + " out of " + PointerNum + " string pointers to STRG List.");
+                LogWriter.WriteLine("Added " + PointerList.Count + " out of " + PointerNum + " string pointers to STRG List.");
 
                 for (int i = 0; i < PointerList.Count; i++)
                 {
@@ -346,7 +346,7 @@ namespace HATE
                     }
                 }
 
-                DebugWriter.WriteLine("Added " + StrPointerList.Count + " good string pointers to SprPointerList.");
+                LogWriter.WriteLine("Added " + StrPointerList.Count + " good string pointers to SprPointerList.");
 
                 Dictionary<string, List<Pointer>> StringDict = new Dictionary<string, List<Pointer>>();
                 int TotalStrings = 0;
@@ -367,14 +367,14 @@ namespace HATE
 
                 foreach (string ending in StringDict.Keys)
                 {
-                    DebugWriter.WriteLine("Added " + StringDict[ending].Count + " string pointers of ending " + ending + " to dialogue string List.");
+                    LogWriter.WriteLine("Added " + StringDict[ending].Count + " string pointers of ending " + ending + " to dialogue string List.");
 
                     StringDict[ending].Shuffle(delegate (Pointer LeftPtr, Pointer RightPtr)
                     {
                         long Tmp = LeftPtr.PtrLocation;
                         LeftPtr.PtrLocation = RightPtr.PtrLocation;
                         RightPtr.PtrLocation = Tmp;
-                    });
+                    }, random);
 
                     for (int i = 0; i < StringDict[ending].Count; i++)
                     {
@@ -384,55 +384,30 @@ namespace HATE
                     }
                 }
 
-                DebugWriter.WriteLine("Wrote " + TotalStrings + " string pointers to " + DataWin + ".");
+                LogWriter.WriteLine("Wrote " + TotalStrings + " string pointers to " + DataWin + ".");
 
                 return true;
             });
         }
-    }
 
-    public static class Ext
-    {
-        public static void Shuffle<T>(this IList<T> list)
+        public void PointerSwapLoc(Pointer lref, Pointer rref)
         {
-            int n = list.Count;
-            while (n > 1)
-            {
-                n--;
-                int k = HATE.RNG.Next(n + 1);
-                T value = list[k];
-                list[k] = list[n];
-                list[n] = value;
-            }
+            long tmp = lref.PtrLocation;
+            lref.PtrLocation = rref.PtrLocation;
+            rref.PtrLocation = tmp;
         }
 
-        public static void Shuffle<T>(this IList<T> list, Action<T, T> SwapFunc)
+        public T[] DeepCopy<T>(T[] Array) where T : struct
         {
-            int n = list.Count;
-            while (n > 1)
+            T[] tmp = new T[Array.Length];
+
+            for (int i = 0; i < Array.Length; i++)
             {
-                n--;
-                int k = HATE.RNG.Next(n + 1);
-                SwapFunc(list[n], list[k]);
+                tmp[i] = Array[i];
             }
+
+            return tmp;
         }
 
-        public static byte[] Garble(this byte[] ar, float chnc)
-        {
-            List<byte> a = new List<byte>();
-
-            for (int i = 0; i < ar.Count(); i++)
-            {
-                if (((ar[i] > 47 && ar[i] < 58) || (ar[i] > 96 && ar[i] < 123) || (ar[i] > 64 && ar[i] < 91)) && (HATE.RNG.NextDouble() < chnc))
-                {
-                    a.Add((byte)(HATE.RNG.Next(75) + 47));
-                }
-                else
-                {
-                    a.Add(ar[i]);
-                }
-            }
-            return a.ToArray();
-        }
-    }
+    }  
 }
