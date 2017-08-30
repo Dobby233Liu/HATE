@@ -58,7 +58,7 @@
             this.btnCorrupt.Name = "btnCorrupt";
             this.btnCorrupt.Size = new System.Drawing.Size(147, 25);
             this.btnCorrupt.TabIndex = 0;
-            this.btnCorrupt.Text = "-CORRUPT-";
+            this.btnCorrupt.Text = "-破坏-";
             this.btnCorrupt.UseVisualStyleBackColor = false;
             this.btnCorrupt.Click += new System.EventHandler(this.button_Corrupt_Clicked);
             // 
@@ -76,7 +76,7 @@
             this.chbShuffleText.Name = "chbShuffleText";
             this.chbShuffleText.Size = new System.Drawing.Size(150, 31);
             this.chbShuffleText.TabIndex = 1;
-            this.chbShuffleText.Text = "Shuffle Text";
+            this.chbShuffleText.Text = "破坏文字";
             this.chbShuffleText.UseVisualStyleBackColor = false;
             this.chbShuffleText.CheckedChanged += new System.EventHandler(this.chbShuffleText_CheckedChanged);
             // 
@@ -94,7 +94,7 @@
             this.chbShuffleGFX.Name = "chbShuffleGFX";
             this.chbShuffleGFX.Size = new System.Drawing.Size(172, 31);
             this.chbShuffleGFX.TabIndex = 2;
-            this.chbShuffleGFX.Text = "Shuffle Sprites";
+            this.chbShuffleGFX.Text = "破坏 Sprites";
             this.chbShuffleGFX.UseVisualStyleBackColor = false;
             this.chbShuffleGFX.CheckedChanged += new System.EventHandler(this.chbShuffleGFX_CheckedChanged);
             // 
@@ -112,7 +112,7 @@
             this.chbHitboxFix.Name = "chbHitboxFix";
             this.chbHitboxFix.Size = new System.Drawing.Size(125, 31);
             this.chbHitboxFix.TabIndex = 3;
-            this.chbHitboxFix.Text = "Hitbox Fix";
+            this.chbHitboxFix.Text = "文字显示区修复";
             this.chbHitboxFix.UseVisualStyleBackColor = false;
             this.chbHitboxFix.CheckedChanged += new System.EventHandler(this.chbHitboxFix_CheckedChanged);
             // 
@@ -130,7 +130,7 @@
             this.chbShuffleFont.Name = "chbShuffleFont";
             this.chbShuffleFont.Size = new System.Drawing.Size(156, 31);
             this.chbShuffleFont.TabIndex = 4;
-            this.chbShuffleFont.Text = "Shuffle Fonts";
+            this.chbShuffleFont.Text = "破坏字体";
             this.chbShuffleFont.UseVisualStyleBackColor = false;
             this.chbShuffleFont.CheckedChanged += new System.EventHandler(this.chbShuffleFont_CheckedChanged);
             // 
@@ -148,7 +148,7 @@
             this.chbShuffleBG.Name = "chbShuffleBG";
             this.chbShuffleBG.Size = new System.Drawing.Size(145, 31);
             this.chbShuffleBG.TabIndex = 5;
-            this.chbShuffleBG.Text = "Shuffle GFX";
+            this.chbShuffleBG.Text = "破坏 GFX";
             this.chbShuffleBG.UseVisualStyleBackColor = false;
             this.chbShuffleBG.CheckedChanged += new System.EventHandler(this.chbShuffleBG_CheckedChanged);
             // 
@@ -166,7 +166,7 @@
             this.chbShuffleAudio.Name = "chbShuffleAudio";
             this.chbShuffleAudio.Size = new System.Drawing.Size(156, 31);
             this.chbShuffleAudio.TabIndex = 6;
-            this.chbShuffleAudio.Text = "Shuffle Audio";
+            this.chbShuffleAudio.Text = "破坏音频";
             this.chbShuffleAudio.UseVisualStyleBackColor = false;
             this.chbShuffleAudio.CheckedChanged += new System.EventHandler(this.chbShuffleAudio_CheckedChanged);
             // 
@@ -184,7 +184,7 @@
             this.chbShowSeed.Name = "chbShowSeed";
             this.chbShowSeed.Size = new System.Drawing.Size(129, 31);
             this.chbShowSeed.TabIndex = 7;
-            this.chbShowSeed.Text = "Show Seed";
+            this.chbShowSeed.Text = "显示种子";
             this.chbShowSeed.UseVisualStyleBackColor = false;
             this.chbShowSeed.CheckedChanged += new System.EventHandler(this.chbShowSeed_CheckedChanged);
             // 
@@ -220,7 +220,7 @@
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(50, 17);
             this.label1.TabIndex = 10;
-            this.label1.Text = "Seed:";
+            this.label1.Text = "种子:";
             // 
             // label2
             // 
@@ -231,7 +231,7 @@
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(57, 17);
             this.label2.TabIndex = 11;
-            this.label2.Text = "Power:";
+            this.label2.Text = "力量:";
             // 
             // btnLaunch
             // 
@@ -243,7 +243,7 @@
             this.btnLaunch.Name = "btnLaunch";
             this.btnLaunch.Size = new System.Drawing.Size(147, 25);
             this.btnLaunch.TabIndex = 12;
-            this.btnLaunch.Text = "-LAUNCH-";
+            this.btnLaunch.Text = "-打开-";
             this.btnLaunch.UseVisualStyleBackColor = false;
             this.btnLaunch.Click += new System.EventHandler(this.btnLaunch_Clicked);
             // 
@@ -257,7 +257,7 @@
             this.btnBrowse.Name = "btnBrowse";
             this.btnBrowse.Size = new System.Drawing.Size(147, 25);
             this.btnBrowse.TabIndex = 13;
-            this.btnBrowse.Text = "-BROWSE-";
+            this.btnBrowse.Text = "-浏览-";
             this.btnBrowse.UseVisualStyleBackColor = false;
             this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Clicked);
             // 
@@ -270,7 +270,7 @@
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(114, 17);
             this.label3.TabIndex = 14;
-            this.label3.Text = "Current Game:";
+            this.label3.Text = "现在游戏:";
             // 
             // lblGameName
             // 
@@ -299,7 +299,7 @@
             this.chbGarbleText.Name = "chbGarbleText";
             this.chbGarbleText.Size = new System.Drawing.Size(140, 31);
             this.chbGarbleText.TabIndex = 16;
-            this.chbGarbleText.Text = "Garble Text";
+            this.chbGarbleText.Text = "Garble 文字";
             this.chbGarbleText.UseVisualStyleBackColor = false;
             // 
             // MainForm
