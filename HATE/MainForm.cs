@@ -122,7 +122,7 @@ namespace HATE
         public void UpdateCorrupt()
         {
             Corrupt = ShuffleGFX || ShuffleText || HitboxFix || ShuffleFont || ShuffleAudio || ShuffleBG;
-            btnCorrupt.Text = Corrupt ? " -CORRUPT- " : " -RESTORE- ";
+            btnCorrupt.Text = Corrupt ? " -破坏- " : " -重置- ";
             btnCorrupt.ForeColor = Corrupt ? Color.Coral : Color.LimeGreen;
         }
 
@@ -140,7 +140,7 @@ namespace HATE
 
             if (!byte.TryParse(txtPower.Text, out Power))
             {
-                MessageBox.Show("Please set Power to a number between 0 and 255 and try again.");
+                MessageBox.Show("需要0-255的力量等级！");
                 return false;
             }
 
